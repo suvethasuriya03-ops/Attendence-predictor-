@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Attendance Predictor & Free Class Locator - SRM Institute</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--p:#667eea;--s:#764ba2;--d:#d32f2f;--w:#f57c00;--ok:#388e3c;--i:#1976d2;--b:#e0e0e0;--l:#f5f5f5;--t:#333;--bg:#f5f6f9;--card:#fff;--tx:#1a1d23;--mu:#667085;--bd:#e3e6ec;--free:#0b8a4a;--fb:#e5f6ec;--busy:#c5372c;--bb:#fdecea;--ac:#4f46e5}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:linear-gradient(135deg,var(--p),var(--s));min-height:100vh;padding:20px;color:var(--t)}
+.container{max-width:1400px;margin:auto}
+header{text-align:center;color:#fff;margin-bottom:28px}
+header h1{font-size:2.6em;text-shadow:2px 2px 4px #0005}
+.badge-inst{background:#ffffff33;padding:9px 20px;border-radius:20px;display:inline-block;margin-bottom:10px}
+.nav{display:flex;gap:10px;margin-bottom:22px;flex-wrap:wrap;justify-content:center}
+.nav button{padding:11px 22px;border:2px solid #fff;background:#ffffff33;color:#fff;border-radius:8px;cursor:pointer;font-weight:600}
+.nav button:hover,.nav button.active{background:#fff;color:var(--p)}
+.tab{display:none}.tab.active{display:block}
+.card{background:#fff;border-radius:12px;padding:28px;box-shadow:0 10px 30px #0002;margin-bottom:22px}
+.card h2{color:var(--p);margin-bottom:18px;font-size:1.5em}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.fg{margin-bottom:16px}
+label{display:block;margin-bottom:6px;font-weight:600;color:var(--t)}
+input,select{width:100%;padding:11px;border:2px solid var(--b);border-radius:6px;font-size:1em;font-family:inherit}
+input:focus,select:focus{outline:none;border-color:var(--p)}
+input[readonly]{background:var(--l);color:#555}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+button{padding:12px 22px;border:none;border-radius:6px;font-size:1em;font-weight:600;cursor:pointer}
+.btns{display:flex;gap:12px;margin-top:16px}.bp{background:linear-gradient(135deg,var(--p),var(--s));color:#fff;flex:1}.bs{background:var(--l);color:var(--t)}
+.alert{padding:14px 18px;border-radius:8px;margin-bottom:16px;border-left:4px solid;line-height:1.5}
+.alert-danger{background:#ffe5e5;border-color:var(--d);color:#b71c1c}.alert-warning{background:#fff3e0;border-color:var(--w);color:#e65100}.alert-success{background:#e8f5e9;border-color:var(--ok);color:#1b5e20}.alert-info{background:#e3f2fd;border-color:var(--i);color:#0d47a1}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px;margin-bottom:20px}
+.stat{background:var(--l);padding:16px;border-radius:8px;text-align:center;border:1px solid var(--b)}
+.stat b{display:block;font-size:1.8em;color:var(--p)}.stat span{font-size:.75em;color:#888;font-weight:600}
+.rbox{padding:18px;border-radius:8px;margin-bottom:14px;border-left:4px solid var(--p);background:#fafafa}
+.rbox h4{margin-bottom:8px}.rval{font-size:2em;font-weight:700;color:var(--p)}.rsub{font-size:.85em;color:#666;margin:4px 0 10px}
+.bar{background:var(--b);height:12px;border-radius:6px;overflow:hidden}.fill{height:100%;width:0;background:linear-gradient(90deg,var(--p),var(--s));transition:width .4s}
+.info{background:#f9f9f9;padding:16px;border-radius:8px;border:1px solid var(--b);margin-bottom:14px;line-height:1.7;color:#555}
+.chart{position:relative;height:300px}.bad{color:var(--d);font-weight:700}.mid{color:var(--w);font-weight:700}.good{color:var(--ok);font-weight:700}
+#chatBtn{position:fixed;bottom:28px;right:28px;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,var(--p),var(--s));color:#fff;font-size:26px;padding:0;z-index:999}
+#chatWin{position:fixed;bottom:98px;right:28px;width:340px;height:460px;background:#fff;border-radius:12px;box-shadow:0 5px 40px #0004;display:none;flex-direction:column;z-index:999}
+#chatWin.on{display:flex}.ch{background:linear-gradient(135deg,var(--p),var(--s));color:#fff;padding:14px;border-radius:12px 12px 0 0;font-weight:600;display:flex;justify-content:space-between}.ch button{background:none;color:#fff;padding:0 6px;font-size:20px}
+#msgs{flex:1;overflow-y:auto;padding:14px}.m{margin-bottom:10px;padding:9px 12px;border-radius:6px;font-size:.9em;line-height:1.4}.m.user{background:var(--l);margin-left:30px;text-align:right}.m.bot{background:#e3f2fd;color:var(--i);margin-right:30px}.ci{display:flex;gap:8px;padding:12px;border-top:1px solid var(--b)}.ci button{padding:9px 14px;background:var(--p);color:#fff}
+.locator{background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:14px;padding:18px}
+.locator h2{color:var(--ac)}.locator input,.locator select{background:var(--bg);color:var(--tx);border:1px solid var(--bd)}
+.ctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.ctl label{font-size:12px;color:var(--mu);display:flex;align-items:center;gap:6px}
+.stage{height:440px;perspective:1400px;display:flex;justify-content:center;align-items:flex-end;padding-bottom:50px;overflow:hidden;background:var(--card);border:1px solid var(--bd);border-radius:14px;margin-top:10px}
+.scene{position:relative;width:250px;height:110px;transform-style:preserve-3d;transform:rotateX(58deg) rotateZ(var(--rz,-35deg))}
+.slab{position:absolute;inset:0;transform-style:preserve-3d;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:auto 1fr;gap:6px;padding:6px;background:#7882962e;border:1px solid var(--bd);border-radius:8px}
+.tile{display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;border-radius:6px;cursor:pointer;color:#fff;box-shadow:0 3px 0 #0004}
+.tile.f{background:#16a05a}.tile.b{background:#d64336}.tile.sel{outline:3px solid #fff;box-shadow:0 0 14px 3px var(--ac)}.tile.cl{outline:3px dashed #7c74ff}
+.fl{grid-column:1/-1;font-size:10px;color:var(--mu)}.leg{font-size:12px;color:var(--mu);margin:6px 0}.lbl{font-size:13px;color:var(--mu);margin-top:8px}.cd{font:700 36px/1.1 ui-monospace,Menlo,monospace;margin:2px 0 8px}.acts{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}.wa{background:#1fa855;color:#fff;text-decoration:none;padding:10px 14px;border-radius:10px;font-weight:700}
+.lgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}.rm{border:1px solid var(--bd);border-radius:12px;padding:10px;background:var(--card)}.rm.f{border-left:4px solid var(--free)}.rm.b{border-left:4px solid var(--busy)}.h{display:flex;justify-content:space-between;align-items:center;gap:6px}.pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px}.f .pill{background:var(--fb);color:var(--free)}.b .pill{background:var(--bb);color:var(--busy)}.u{font-size:13px;margin:6px 0}.tag{display:inline-block;font-size:11px;padding:2px 7px;border-radius:99px;border:1px solid var(--bd);color:var(--mu);margin-right:4px}.tl{position:relative;height:8px;background:var(--fb);border-radius:4px;margin-top:6px;overflow:hidden}.tl i{position:absolute;top:0;bottom:0;background:var(--busy);opacity:.75}.tl b{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--tx)}.ax{display:flex;justify-content:space-between;font-size:10px;color:var(--mu)}.fh{display:flex;justify-content:space-between;align-items:baseline;margin:18px 0 8px}.fh span{color:var(--mu);font-size:13px}.note{color:var(--mu);font-size:13px;margin:6px 0}.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.chips button{font-size:12px;padding:5px 9px;color:var(--mu)}
+@media(max-width:768px){.grid2,.row{grid-template-columns:1fr}header h1{font-size:1.9em}#chatWin{width:90%;right:5%}}
+</style>
+</head>
+<body>
+<div class="container">
+<header><div class="badge-inst">🏫 SRM Institute of Science and Technology - Tiruchirappalli</div><h1>📚 Attendance Predictor</h1><p>Attendance calculator + analytics + free classroom locator</p></header>
+
+<div class="nav">
+<button class="active" data-tab="calc">📊 Calculator</button><button data-tab="analytics">📈 Analytics</button><button data-tab="sim">📅 Leave Simulator</button><button data-tab="locator">🏫 Free Class Locator</button><button data-tab="guide">ℹ️ Guide</button>
+</div>
+
+<div class="tab active" id="tab-calc">
+<div class="grid2">
+<div class="card"><h2>📋 Your Information</h2>
+<div class="fg"><label>Section (optional)</label><select id="section"><option value="">-- Choose your section --</option><option>II BME</option><option>II ECE-DS A</option><option>II ECE-DS B</option><option>III ECE-A</option><option>III ECE-B</option><option>III ECE-DS</option><option>III BME</option><option>IV ECE-A</option><option>IV ECE-B</option></select></div>
+<div class="row"><div class="fg"><label>Total classes / semester</label><input id="total" value="45" readonly></div><div class="fg"><label>Classes remaining</label><input id="left" readonly></div></div>
+<div class="row"><div class="fg"><label>Classes conducted</label><input type="number" id="conducted" min="1" max="45" oninput="livePct()"></div><div class="fg"><label>Classes attended</label><input type="number" id="attended" min="0" oninput="livePct()"></div></div>
+<div class="fg"><label>Current attendance %</label><input id="pct" readonly></div>
+<div class="btns"><button class="bp" onclick="calculate()">🔍 Calculate Now</button><button class="bs" onclick="resetAll()">Reset</button></div></div>
+
+<div class="card"><h2>📊 Results</h2><div id="alerts"></div><div id="none" style="text-align:center;color:#999;padding:40px 10px">👈 Enter your details and calculate</div>
+<div id="results" style="display:none"><div class="stats"><div class="stat"><b id="s-rem">--</b><span>CLASSES LEFT</span></div><div class="stat"><b id="s-cur">--</b><span>CURRENT %</span></div><div class="stat"><b id="s-max">--</b><span>MAX POSSIBLE %</span></div></div>
+<div class="rbox"><h4>⚠️ To stay safe (75%)</h4><div class="rval" id="res-75">--</div><div class="rsub" id="sub-75"></div><div class="bar"><div class="fill" id="bar-75"></div></div></div>
+<div class="rbox"><h4>🎯 To reach excellence (90%)</h4><div class="rval" id="res-90">--</div><div class="rsub" id="sub-90"></div><div class="bar"><div class="fill" id="bar-90"></div></div></div></div></div></div>
+<div class="card"><h2>📈 Detailed Analysis</h2><div id="analysis"><p style="color:#999">Results will appear here.</p></div></div>
+<div class="card"><h2>📊 Attendance Visualization</h2><div class="chart"><canvas id="barChart"></canvas></div></div>
+</div>
+
+<div class="tab" id="tab-analytics"><div class="card"><h2>📈 Attendance Health Dashboard</h2><div class="stats"><div class="stat"><b id="a-pct">0%</b><span>CURRENT ATTENDANCE</span></div><div class="stat"><b id="a-att">0</b><span>ATTENDED</span></div><div class="stat"><b id="a-miss">0</b><span>MISSED SO FAR</span></div><div class="stat"><b id="a-stat">--</b><span>STATUS</span></div></div><div class="chart"><canvas id="pieChart"></canvas></div></div></div>
+
+<div class="tab" id="tab-sim"><div class="card"><h2>📅 Leave & OD Simulator</h2><p style="color:#666;margin-bottom:16px">Run the calculator first, then test future absences.</p><div class="row"><div class="fg"><label>Future classes you will miss</label><input type="number" id="sim-miss" min="0" value="0" oninput="simulate()"></div><div class="fg"><label>OD / approved (counted present)</label><input type="number" id="sim-od" min="0" value="0" oninput="simulate()"></div></div><div class="info" id="sim-out">Run the calculator first.</div></div></div>
+
+<div class="tab" id="tab-locator"><div class="locator">
+<h2>🏫 Free Class Locator</h2><p class="sub">Find empty rooms from the timetable. Green = free, red = class scheduled.</p>
+<div class="card"><strong>Ask in plain English</strong><div class="ai" style="margin-top:8px"><input id="q" placeholder="AC room on ground floor for 2 hours"><button class="p" id="go">Find rooms</button></div><div class="chips" id="ex"></div><div class="res" id="res"></div></div>
+<h2>3D building map</h2><div class="ctl"><select id="day"></select><input type="time" id="tm"><button id="now">Now</button><label>Rotate <input type="range" id="rot" min="-70" max="20" value="-35"></label></div>
+<div class="leg">Ground floor at the bottom. Green = free, red = class scheduled. Tap a room.</div><div class="stage"><div class="scene" id="scene"></div></div><div class="card" id="panel" style="margin-top:10px"></div>
+<h2>Floor grid</h2><div id="floors"></div><p class="note">AC, capacity and floor are timetable-based assumptions.</p>
+</div></div>
+
+<div class="tab" id="tab-guide"><div class="card"><h2>ℹ️ How the numbers work</h2><div class="info"><b>Current attendance</b> = attended ÷ conducted × 100</div><div class="info"><b>Classes remaining</b> = 45 − conducted</div><div class="info"><b>75% target</b> = 34 attended classes. <b>90% target</b> = 41 attended classes.</div></div></div>
+</div>
+
+<button id="chatBtn" onclick="toggleChat()">💬</button><div id="chatWin"><div class="ch"><span>Attendance Advisor 🤖</span><button onclick="toggleChat()">×</button></div><div id="msgs"></div><div class="ci"><input id="chatIn" placeholder="what if I miss 5 classes?" onkeypress="if(event.key==='Enter')sendChat()"><button onclick="sendChat()">Send</button></div></div>
+
+<script>
+const TOTAL=45,$=id=>document.getElementById(id),S={c:0,a:0,charts:{}};
+const target=p=>Math.ceil(TOTAL*p/100),needed=(p,a)=>Math.max(0,target(p)-a);
+document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('tab-'+b.dataset.tab).classList.add('active');if(b.dataset.tab==='analytics')renderAnalytics();if(b.dataset.tab==='sim')simulate();if(b.dataset.tab==='locator')locatorSync();});
+function livePct(){let c=+$('conducted').value,a=+$('attended').value;$('pct').value=c>0&&a>=0&&a<=c?(a/c*100).toFixed(2)+'%':'';$('left').value=$('conducted').value!==''&&c<=TOTAL?TOTAL-c:''}
+function msg(t,type){$('alerts').innerHTML=`<div class="alert alert-${type}">${t}</div>`}
+function calculate(){let c=parseInt($('conducted').value),a=parseInt($('attended').value);if(isNaN(c)||c<1||c>TOTAL)return msg('Classes conducted must be between 1 and 45.','danger');if(isNaN(a)||a<0||a>c)return msg('Classes attended must be between 0 and classes conducted.','danger');S.c=c;S.a=a;let rem=TOTAL-c,pct=a/c*100,max=(a+rem)/TOTAL*100;let goal=p=>{let n=needed(p,a);return{n,t:target(p),ok:n<=rem,skip:rem-n}},r75=goal(75),r90=goal(90);msg(!r75.ok?`🚨 75% is not reachable. Best possible final attendance: ${max.toFixed(1)}%.`:r75.n===0?'✅ 75% already secured.':`⚠️ Attend at least ${r75.n} of ${rem} remaining classes to finish at 75% or above.`,!r75.ok?'danger':r75.n===0?'success':'warning');$('none').style.display='none';$('results').style.display='block';$('s-rem').textContent=rem;$('s-cur').textContent=pct.toFixed(1)+'%';$('s-max').textContent=max.toFixed(1)+'%';fill(75,r75,rem,max);fill(90,r90,rem,max);$('analysis').innerHTML=`<div class="info"><p><b>Total:</b> ${TOTAL}</p><p><b>Conducted:</b> ${c} &nbsp; <b>Attended:</b> ${a} &nbsp; <b>Missed:</b> ${c-a}</p><p><b>Current:</b> ${pct.toFixed(2)}%</p><p><b>Remaining:</b> ${rem}</p><p><b>Best possible:</b> ${max.toFixed(2)}%</p><hr style="margin:12px 0;border:0;border-top:1px solid var(--b)"><p><b>75%:</b> ${r75.n===0?'Already secured':r75.ok?'Attend '+r75.n+' of '+rem+' remaining; can miss '+r75.skip:'Not reachable'}</p><p><b>90%:</b> ${r90.n===0?'Already secured':r90.ok?'Attend '+r90.n+' of '+rem+' remaining; can miss '+r90.skip:'Not reachable'}</p></div>`;drawBar(pct,r75,r90,rem);simulate()}
+function fill(p,r,rem,max){$('res-'+p).textContent=r.n===0?'✅ Secured':r.ok?r.n+' classes':'❌ Not reachable';$('sub-'+p).textContent=r.n===0?`Already at ${r.t}/${TOTAL} needed`:r.ok?`Attend ${r.n} of ${rem}; can miss ${r.skip}`:`Short by ${r.n-rem} (max ${max.toFixed(1)}%)`;$('bar-'+p).style.width=(r.n===0?0:r.ok?r.n/rem*100:100)+'%'}
+function resetAll(){['conducted','attended','pct','left','section'].forEach(id=>$(id).value='');$('results').style.display='none';$('none').style.display='block';$('alerts').innerHTML='';$('analysis').innerHTML='<p style="color:#999">Results will appear here.</p>';S.c=S.a=0;Object.values(S.charts).forEach(x=>x&&x.destroy());S.charts={};simulate()}
+function drawBar(p,r75,r90,rem){if(S.charts.bar)S.charts.bar.destroy();let sh=r=>rem?Math.min(100,r.n/rem*100):0;S.charts.bar=new Chart($('barChart'),{type:'bar',data:{labels:['Current attendance %','% remaining for 75%','% remaining for 90%'],datasets:[{data:[p,sh(r75),sh(r90)],backgroundColor:['#667eea','#f57c00','#388e3c'],borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:100,ticks:{stepSize:10}}}}})}
+function renderAnalytics(){if(!S.c)return;let p=S.a/S.c*100,rem=TOTAL-S.c;$('a-pct').textContent=p.toFixed(1)+'%';$('a-att').textContent=S.a;$('a-miss').textContent=S.c-S.a;$('a-stat').textContent=p<75?'At Risk':p>=90?'Excellent':'On Track';if(S.charts.pie)S.charts.pie.destroy();S.charts.pie=new Chart($('pieChart'),{type:'doughnut',data:{labels:['Attended','Missed','Remaining'],datasets:[{data:[S.a,S.c-S.a,rem],backgroundColor:['#667eea','#d32f2f','#e0e0e0']}]},options:{responsive:true,maintainAspectRatio:false}})}
+function simulate(){let o=$('sim-out');if(!S.c){o.textContent='Run the calculator first.';return}let rem=TOTAL-S.c,m=Math.min(Math.max(0,+$('sim-miss').value||0),rem),od=Math.min(Math.max(0,+$('sim-od').value||0),m),fa=S.a+rem-m+od,p=fa/TOTAL*100;o.innerHTML=`<p><b>Remaining:</b> ${rem} &nbsp; <b>Missing:</b> ${m} &nbsp; <b>OD:</b> ${od}</p><p><b>Final attendance:</b> <span class="${p<75?'bad':p<90?'mid':'good'}">${p.toFixed(2)}%</span></p>`}
+const chat=[{r:'bot',t:'Hi! 👋 Ask me "how many classes for 90%?" or "what if I miss 5 classes?"'}];function drawChat(){$('msgs').innerHTML=chat.map(m=>`<div class="m ${m.r}">${m.t}</div>`).join('');$('msgs').scrollTop=$('msgs').scrollHeight}function toggleChat(){$('chatWin').classList.toggle('on');drawChat()}function sendChat(){let q=$('chatIn').value.trim();if(!q)return;$('chatIn').value='';chat.push({r:'user',t:q.replace(/</g,'&lt;')});drawChat();setTimeout(()=>{chat.push({r:'bot',t:reply(q.toLowerCase())});drawChat()},300)}function reply(q){if(!S.c)return'Enter your classes conducted and attended, then click Calculate.';let rem=TOTAL-S.c,p=S.a/S.c*100,num=(q.match(/\d+/)||[])[0];if(num&&/(miss|leave|skip|bunk|absent)/.test(q)){let m=Math.min(+num,rem),fp=(S.a+rem-m)/TOTAL*100;return`If you miss ${m} remaining classes, final attendance is ${fp.toFixed(1)}%.`}if(q.includes('90')){let n=needed(90,S.a);return n>rem?`90% is not reachable; you need ${n} more classes and only ${rem} remain.`:`For 90%, attend ${n} of ${rem} remaining classes.`}let n=needed(75,S.a);return n>rem?`75% is not reachable; you need ${n} more classes.`:`You are at ${p.toFixed(1)}%. For 75%, attend ${n} of ${rem} remaining classes.`}drawChat();
+
+/* FREE CLASS LOCATOR */
+const P=[0,[540,590],[590,640],[650,700],[700,750],[750,800],[800,850],[850,900],[910,960],[960,1010]],DAYS=['Monday','Tuesday','Wednesday','Thursday','Friday'],FL=['Ground floor','1st floor','2nd floor','3rd floor','4th floor','5th floor'];
+const R={'108':['IST 108 Lab',0,'lab',1,40],'107':['IST 107 Lab',0,'lab',1,40],'TB106':['TB-106',0,'classroom',0,40],'211':['IST 211',1,'classroom',0,60],'225':['IST 225',1,'classroom',0,60],'227':['IST 227',1,'classroom',0,60],'309':['IST 309 Lab',2,'lab',1,40],'401':['IST 401',3,'classroom',0,60],'411':['IST 411',3,'classroom',0,60],'416':['IST 416',3,'classroom',0,60],'518':['IST 518',4,'classroom',1,60],'519':['IST 519',4,'classroom',1,60],'602':['IST 602',5,'classroom',1,60],'625':['IST 625',5,'classroom',1,60]};
+const B=[];const add=(rooms,days,p1,p2)=>rooms.split(',').forEach(r=>[...days].forEach(d=>B.push([r,+d,P[p1][0],P[p2][1]])));
+add('518','01234',1,4);add('625','0',6,7);add('625','1',7,7);add('108,309','2',8,9);add('108,309','4',6,7);add('416','01234',1,4);add('602','0',6,7);add('602','1',6,6);add('309,107','0',8,9);add('309,107','3',6,7);add('TB106','1',8,9);add('TB106','2',7,7);add('519','01234',1,4);add('108,107','1',6,7);add('108,107','4',8,9);add('625','2',8,9);add('625','4',6,6);add('411','01234',6,9);add('309,107','0',3,4);add('309,107','1',1,2);add('401','2',1,1);add('401','3',1,2);add('TB106','3',3,4);add('TB106','4',1,1);add('227','012',1,4);add('227','3',1,2);add('227','3',4,4);add('227','4',1,3);add('108','3',3,3);add('602','0134',1,4);add('602','2',1,3);add('602','2',7,7);add('602','4',8,9);add('107,309','0',6,7);add('107,309','3',8,9);add('TB106','1',6,7);add('TB106','2',6,6);add('518','01234',6,9);add('108,309','0',1,2);add('108,309','3',1,2);add('625','1',1,2);add('625','2',1,1);add('211','01234',6,9);add('625','0',1,2);add('625','1',3,3);add('107','0',3,4);add('108','1',1,2);add('108','3',4,4);add('108','4',1,1);add('225','0',1,1);add('225','0',3,4);add('225','1',1,4);add('225','2',1,1);add('225','2',3,4);add('225','34',1,4);add('108','2',2,2);
+const busy=(r,d)=>{let v=B.filter(b=>b[0]==r&&b[1]==d).map(b=>[b[2],b[3]]).sort((a,b)=>a[0]-b[0]),o=[];for(let s of v){let l=o[o.length-1];if(l&&s[0]<=l[1]+10)l[1]=Math.max(l[1],s[1]);else o.push([...s])}return o};
+const status=(r,d,t)=>{let v=busy(r,d);for(let x of v)if(t>=x[0]&&t<x[1])return{free:false,until:x[1]};let n=v.find(x=>x[0]>t);return{free:true,until:n?n[0]:Infinity}};
+const fmt=m=>{let h=Math.floor(m/60),mm=String(m%60).padStart(2,'0');return`${h%12||12}:${mm} ${h<12?'AM':'PM'}`};const dur=m=>m===Infinity?'':m<60?`${m} min`:`${Math.floor(m/60)}h${m%60?' '+m%60+'m':''}`;
+let locDay=0,locTime=600,sel=null,claimed={};
+function tags(r){let q=R[r];return`<span class="tag">${q[2]}</span>${q[3]?'<span class="tag">AC</span>':''}<span class="tag">~${q[4]} seats</span>`}
+function tl(r){let v=busy(r,locDay),x=m=>Math.max(0,Math.min(100,(m-540)/4.7));return`<div class="tl">${v.map(([s,e])=>`<i style="left:${x(s)}%;width:${x(e)-x(s)}%"></i>`).join('')}<b style="left:${x(locTime)}%"></b></div>`}
+function roomLine(s){return s.free?(s.until===Infinity?'Free for the rest of the day':`Free until ${fmt(s.until)} (${dur(s.until-locTime)})`):`In use until ${fmt(s.until)}`}
+function locatorGrid(){let h='';FL.forEach((fn,f)=>{let rs=Object.keys(R).filter(r=>R[r][1]===f);if(!rs.length)return;let st=rs.map(r=>[r,status(r,locDay,locTime)]),n=st.filter(x=>x[1].free).length;h+=`<div class="fh"><strong>${fn}</strong><span>${n} of ${rs.length} free</span></div><div class="lgrid">`+st.map(([r,s])=>`<div class="rm ${s.free?'f':'b'}" data-room="${r}" style="cursor:pointer"><div class="h"><strong>${R[r][0]}</strong><span class="pill">${s.free?'FREE':'BUSY'}</span></div><div class="u">${roomLine(s)}</div>${tags(r)}${tl(r)}</div>`).join('')+'</div>'});$('floors').innerHTML=h}
+function locatorMap(){let h='';FL.forEach((fn,f)=>{let rs=Object.keys(R).filter(r=>R[r][1]===f);if(!rs.length)return;h+=`<div class="slab" style="transform:translateZ(${f*72}px)"><span class="fl">${fn}</span>`+rs.map(r=>`<div class="tile ${status(r,locDay,locTime).free?'f':'b'}${sel===r?' sel':''}${claimed[r]?' cl':''}" data-room="${r}">${R[r][0].replace('IST ','')}</div>`).join('')+'</div>'});$('scene').innerHTML=h}
+function panel(){let p=$('panel');if(!sel){p.innerHTML='<p class="note">Tap a room on the map to see its live countdown.</p>';return}let s=status(sel,locDay,locTime);p.innerHTML=`<div class="rm ${s.free?'f':'b'}"><div class="h"><strong>${R[sel][0]} · ${FL[R[sel][1]]}</strong><span class="pill">${s.free?'FREE':'BUSY'}</span></div><div class="lbl">${s.free?(s.until===Infinity?'Free for the rest of the day':'Next class starts in'): 'Class in progress, ends in'}</div><div class="cd">${s.until===Infinity?'—':dur(Math.max(0,s.until-locTime))}</div>${tags(sel)}<div class="acts">${s.free?(claimed[sel]?`<a class="wa" target="_blank" href="https://wa.me/?text=${encodeURIComponent('Heading to '+R[sel][0]+' ('+FL[R[sel][1]]+'). '+(s.until===Infinity?'It is free for the rest of the day.':'It is free until '+fmt(s.until)+'.'))}">WhatsApp</a><button id="release">Release room</button>`:'<button class="p" id="claim">Claim this room</button>'):'<span class="note">In use right now. Pick a green room to claim.</span>'}</div></div>`}
+function locatorSync(){ $('day').value=locDay;$('tm').value=`${String(Math.floor(locTime/60)).padStart(2,'0')}:${String(locTime%60).padStart(2,'0')}`;locatorGrid();locatorMap();panel()}
+function setLocNow(){let n=new Date(),g=n.getDay();locDay=g>=1&&g<=5?g-1:0;locTime=g>=1&&g<=5?n.getHours()*60+n.getMinutes():540;locatorSync()}
+function parseQuery(q){let s=q.toLowerCase(),c={};if(/ground/.test(s))c.floor=0;else{let m=s.match(/(\d)(?:st|nd|rd|th)?\s*floor/);if(m)c.floor=+m[1]}if(/\bnon[- ]?ac\b/.test(s))c.ac=false;else if(/\bac\b|air.?con/.test(s))c.ac=true;let m=s.match(/(\d+(?:\.\d+)?)\s*(hours?|hrs?|h)\b/);if(m)c.minutes=Math.round(+m[1]*60);else if((m=s.match(/(\d+)\s*min/)))c.minutes=+m[1];if((m=s.match(/(\d+)\s*(people|students|members|persons)/)))c.people=+m[1];if(/\blab\b/.test(s))c.type='lab';if((m=s.match(/\bat\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/))){let h=+m[1];if(m[3]==='pm'&&h<12)h+=12;if(m[3]==='am'&&h===12)h=0;c.start=h*60+(+m[2]||0)}DAYS.forEach((n,i)=>{if(s.includes(n.toLowerCase()))c.day=i});return c}
+function searchRooms(c){let d=c.day??locDay,st=c.start??locTime,need=c.minutes||30;return Object.keys(R).filter(r=>{let q=R[r];if(c.floor!=null&&q[1]!==c.floor)return false;if(c.ac!=null&&!!q[3]!==c.ac)return false;if(c.type==='lab'?q[2]!=='lab':q[2]==='lab')return false;if(c.people&&q[4]<c.people)return false;return true}).map(r=>({r,s:status(r,d,st)})).filter(x=>x.s.free&&(x.s.until===Infinity||x.s.until-st>=need))}
+function runLocator(){let q=$('q').value.trim();if(!q)return;let c=parseQuery(q),res=searchRooms(c),need=c.minutes||30;if(!res.length&&c.ac!=null){let x={...c};delete x.ac;res=searchRooms(x)}let cards=res.slice(0,8).map(x=>`<div class="rm f" style="margin-top:8px"><div class="h"><strong>${R[x.r][0]}</strong><span class="pill">${FL[R[x.r][1]]}</span></div><div class="u">${x.s.until===Infinity?'Free for rest of day':'Free until '+fmt(x.s.until)} · fits ${dur(need)}</div>${tags(x.r)}</div>`).join('');$('res').innerHTML=res.length?`<p class="note">Found ${res.length} room(s):</p>${cards}`:'<p class="note">No free room found for that window. Try a shorter duration or later time.</p>'}
+$('day').innerHTML=DAYS.map((n,i)=>`<option value="${i}">${n}</option>`).join('');$('day').onchange=e=>{locDay=+e.target.value;locatorSync()};$('tm').onchange=e=>{let[h,m]=e.target.value.split(':').map(Number);locTime=h*60+m;locatorSync()};$('now').onclick=setLocNow;$('go').onclick=runLocator;$('q').onkeydown=e=>{if(e.key==='Enter')runLocator()};$('rot').oninput=e=>$('scene').style.setProperty('--rz',e.target.value+'deg');
+document.addEventListener('click',e=>{let r=e.target.closest('[data-room]');if(r){sel=r.dataset.room;locatorMap();panel()}if(e.target.id==='claim'&&sel){claimed[sel]=1;locatorMap();panel()}if(e.target.id==='release'&&sel){delete claimed[sel];locatorMap();panel()}});
+['AC room on ground floor for 2 hours','Non-AC room on 3rd floor for 1 hour at 2 pm','Room for 6 people on Thursday at 11 am for 90 minutes'].forEach(s=>{let b=document.createElement('button');b.textContent=s;b.onclick=()=>{$('q').value=s;runLocator()};$('ex').appendChild(b)});
+setLocNow();setInterval(()=>{if(document.getElementById('tab-locator').classList.contains('active')){let n=new Date();locTime=n.getHours()*60+n.getMinutes();locatorSync()}},60000);
+</script>
+</body>
+</html>
